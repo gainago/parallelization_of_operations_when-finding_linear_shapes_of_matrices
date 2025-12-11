@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(make_abstract_syntax_tree LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_executable(make_abstract_syntax_tree main.cpp
+    raw_AST_nodes.h
+    Tokens.h
+    Tokens.cpp
+    Tests.h
+    Tests.cpp
+    parser.h parser.cpp
+    raw_AST_nodes.cpp
+    typed_AST_nodes.h
+    typed_AST_nodes.cpp)
+
+include(GNUInstallDirs)
+install(TARGETS make_abstract_syntax_tree
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
