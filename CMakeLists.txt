@@ -21,3 +21,4 @@ install(TARGETS make_abstract_syntax_tree
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+#some comments for test Qt git tool
