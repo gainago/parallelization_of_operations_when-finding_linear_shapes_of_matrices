@@ -4,6 +4,7 @@
 #include "Tests.h"
 #include "Tokens.h"
 #include "parser.h"
+#include "printer_to_dot.h"
 
 void run_tests_for_tokenize() {
     std::string input = "44A1 + (13)( 52 * 34 - 2)A2^34 - A5";
@@ -955,7 +956,7 @@ void run_tests_for_replace_unary_pluses() {
 
 void run_tests_for_normalize_tokenize_sequence() {
     {
-        std::string input = "-44A21 + 1 + -(13)( +52.4 * -(34^2) - 2)A2^34 - A5";
+        std::string input = "A3 -4A4 - 5A5 + 2*-A5";
         std::vector<Token> tokens = tokenize(input);
         check_arithmetic_signs( tokens );
         normalize_tokenize_sequence( tokens );
@@ -964,9 +965,9 @@ void run_tests_for_normalize_tokenize_sequence() {
         // }"
         Parser parser(tokens);
         std::unique_ptr<raw_AST_nodes::Expression> AST = parser.parse();
-        raw_AST_nodes::print_raw_AST_to_file("Dot_example", *AST);
+        //print_raw_AST_to_file("Dot_example", *AST);
+        TypedResult typed_result = typecheck(*AST);
+
+        print_raw_AST_to_file("Dot_example", *(typed_result.node));
     }
-
-
-
 }

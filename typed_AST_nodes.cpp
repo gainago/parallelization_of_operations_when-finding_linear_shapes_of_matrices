@@ -1,5 +1,4 @@
 
-
 #include "typed_AST_nodes.h"
 #include <stdexcept>
 
@@ -102,4 +101,129 @@ typed_AST_nodes::MatrixPowerPositiveInt::MatrixPowerPositiveInt(
 
 std::string typed_AST_nodes::MatrixPowerPositiveInt::getNodeType() const {
     return "MatrixPowerPositiveInt";
+}
+
+typed_AST_nodes::Exponent::Exponent(int exponent_) : exponent(exponent_) {}
+
+std::string typed_AST_nodes::Exponent::getNodeType() const {
+    return std::to_string(this->exponent);
+}
+
+
+TypedResult typecheck(const raw_AST_nodes::Expression& expr) {
+    if(auto* num = dynamic_cast<const raw_AST_nodes::NumberLiteral*>(&expr) ) {
+        return {
+            std::make_unique<typed_AST_nodes::NumberLiteral>( num->value) ,
+            ExprType::Number
+        };
+    }
+    if(auto* mat = dynamic_cast<const raw_AST_nodes::MatrixVariable*>(&expr) ) {
+        return {
+            std::make_unique<typed_AST_nodes::MatrixVariable>(mat->name),
+            ExprType::Matrix
+        };
+    }
+    if(auto* add = dynamic_cast<const raw_AST_nodes::AddExpression*>(&expr)) {
+        TypedResult left = typecheck(*add->left);
+        TypedResult right = typecheck(*add->right);
+        if(left.type == ExprType::Number && right.type == ExprType::Number) {
+            return {
+                std::make_unique<typed_AST_nodes::NumberAddNumber>(
+                    std::move(left.node), std::move(right.node)
+                    ),
+                ExprType::Number
+            };
+        }
+        if(left.type == ExprType::Matrix && right.type == ExprType::Matrix) {
+            return {
+                std::make_unique<typed_AST_nodes::MatrixAddMatrix>(
+                    std::move(left.node), std::move(right.node)
+                    ),
+                ExprType::Matrix
+            };
+        }
+        throw std::runtime_error("Type error: cannot add number and matrix");
+    }
+    if (auto* sub = dynamic_cast<const raw_AST_nodes::SubtractExpression*>(&expr)) {
+        auto left = typecheck(*sub->left);
+        auto right = typecheck(*sub->right);
+        if (left.type == ExprType::Number && right.type == ExprType::Number) {
+            return {
+                std::make_unique<typed_AST_nodes::NumberSubtractNumber>(
+                    std::move(left.node), std::move(right.node)
+                    ),
+                ExprType::Number
+            };
+        }
+        if (left.type == ExprType::Matrix && right.type == ExprType::Matrix) {
+            return {
+                std::make_unique<typed_AST_nodes::MatrixSubtractMatrix>(
+                    std::move(left.node), std::move(right.node)
+                    ),
+                ExprType::Matrix
+            };
+        }
+        throw std::runtime_error("Type error: cannot subtract number and matrix");
+    }
+    if (auto* mul = dynamic_cast<const raw_AST_nodes::MultiplyExpression*>(&expr)) {
+        auto left = typecheck(*mul->left);
+        auto right = typecheck(*mul->right);
+
+        if (left.type == ExprType::Number && right.type == ExprType::Number) {
+            return {
+                std::make_unique<typed_AST_nodes::NumberMultiplyNumber>(
+                    std::move(left.node), std::move(right.node)
+                    ),
+                ExprType::Number
+            };
+        }
+        if (left.type == ExprType::Matrix && right.type == ExprType::Matrix) {
+            return {
+                std::make_unique<typed_AST_nodes::MatrixMultiplyMatrix>(
+                    std::move(left.node), std::move(right.node)
+                    ),
+                ExprType::Matrix
+            };
+        }
+        if (left.type == ExprType::Number && right.type == ExprType::Matrix) {
+            return {
+                std::make_unique<typed_AST_nodes::NumberMultiplyMatrix>(
+                    std::move(left.node), std::move(right.node)
+                    ),
+                ExprType::Matrix
+            };
+        }
+        if (left.type == ExprType::Matrix && right.type == ExprType::Number) {
+            return {
+                std::make_unique<typed_AST_nodes::NumberMultiplyMatrix>(
+                    std::move(right.node), std::move(left.node)
+                    ),
+                ExprType::Matrix
+            };
+        }
+        throw std::runtime_error("Type error: invalid operands for multiplication");
+    }
+    if (auto* pow = dynamic_cast<const raw_AST_nodes::PowerExpression*>(&expr)) {
+        auto base = typecheck(*pow->base);
+        // Exponent — всегда число, но мы его не типизируем, только проверяем значение
+        int exponent = pow->exponent->exponent;
+        if (base.type == ExprType::Number) {
+            return {
+                std::make_unique<typed_AST_nodes::NumberPowerPositiveInt>(
+                    std::move(base.node), std::make_unique<typed_AST_nodes::Exponent>(exponent)
+                    ),
+                ExprType::Number
+            };
+        }
+        if (base.type == ExprType::Matrix) {
+            return {
+                std::make_unique<typed_AST_nodes::MatrixPowerPositiveInt>(
+                    std::move(base.node), std::make_unique<typed_AST_nodes::Exponent>(exponent)
+                    ),
+                ExprType::Matrix
+            };
+        }
+        throw std::runtime_error("Type error: power base must be number or matrix");
+    }
+    throw std::runtime_error("Unknown expression type");
 }

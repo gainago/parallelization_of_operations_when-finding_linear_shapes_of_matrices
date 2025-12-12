@@ -1,7 +1,9 @@
-#include "raw_AST_nodes.h"
 #include <string>
+#include <stdexcept>
 
-// --- raw_AST_nodes definitions ---
+#include "raw_AST_nodes.h"
+
+
 
 raw_AST_nodes::MatrixVariable::MatrixVariable(std::string name_)
     : name(std::move(name_)) {}
@@ -64,69 +66,6 @@ std::string raw_AST_nodes::PowerExpression::toString() const {
     return "^";
 }
 
-// DotPrinter
-int raw_AST_nodes::DotPrinter::nextId() {
-    return node_counter_++;
-}
 
-void raw_AST_nodes::DotPrinter::print(const Expression& root) {
-    dot_ << "digraph AST {\n";
-    dot_ << "    node [shape=box, style=filled, fillcolor=\"#e0e0e0\"];\n";
-    visit(root);
-    dot_ << "}\n";
-}
-
-std::string raw_AST_nodes::DotPrinter::str() const {
-    return dot_.str();
-}
-
-int raw_AST_nodes::DotPrinter::visit(const Expression& node) {
-    int id = nextId();
-    std::string label = node.toString();
-    // Escape quotes for DOT
-    size_t pos = 0;
-    while ((pos = label.find('"', pos)) != std::string::npos) {
-        label.replace(pos, 1, "\\\"");
-        pos += 2;
-    }
-    dot_ << "    " << id << " [label=\"" << label << "\"];\n";
-
-    if (auto* add = dynamic_cast<const AddExpression*>(&node)) {
-        int leftId = visit(*add->left);
-        int rightId = visit(*add->right);
-        dot_ << "    " << id << " -> " << leftId << ";\n";
-        dot_ << "    " << id << " -> " << rightId << ";\n";
-    }
-    else if (auto* sub = dynamic_cast<const SubtractExpression*>(&node)) {
-        int leftId = visit(*sub->left);
-        int rightId = visit(*sub->right);
-        dot_ << "    " << id << " -> " << leftId << ";\n";
-        dot_ << "    " << id << " -> " << rightId << ";\n";
-    }
-    else if (auto* mul = dynamic_cast<const MultiplyExpression*>(&node)) {
-        int leftId = visit(*mul->left);
-        int rightId = visit(*mul->right);
-        dot_ << "    " << id << " -> " << leftId << ";\n";
-        dot_ << "    " << id << " -> " << rightId << ";\n";
-    }
-    else if (auto* pow = dynamic_cast<const PowerExpression*>(&node)) {
-        int leftId = visit(*pow->base);
-        int rightId = visit(*pow->exponent);
-        dot_ << "    " << id << " -> " << leftId << ";\n";
-        dot_ << "    " << id << " -> " << rightId << ";\n";
-    }
-    // Leaf nodes (NumberLiteral, MatrixVariable) have no children
-    return id;
-}
-
-void raw_AST_nodes::print_raw_AST_to_file(std::string filename, const raw_AST_nodes::Expression& AST) {
-    std::ofstream file(filename.c_str());
-    if (file.is_open()) {
-        DotPrinter printer;
-        printer.print(AST);
-        file << printer.str();
-        file.close();
-    }
-}
 
 

@@ -3,9 +3,7 @@
 
 #include <memory>
 #include <string>
-#include <fstream>
-#include <stdexcept>
-#include <sstream>
+
 
 // parser creates !abstract! syntax tree so we do not know semantics of operations
 namespace raw_AST_nodes {
@@ -61,23 +59,6 @@ struct PowerExpression : public Expression {
     PowerExpression(std::unique_ptr<Expression> base_, std::unique_ptr<Exponent> exponent_);
     std::string toString() const override;
 };
-
-
-
-class DotPrinter {
-    std::ostringstream dot_;
-    int node_counter_ = 0;
-
-    int nextId();
-
-public:
-    void print(const Expression& root);
-    std::string str() const;
-private:
-    int visit(const Expression& node);
-};
-
-void print_raw_AST_to_file(std::string filename, const raw_AST_nodes::Expression& AST);
 
 } // namespace raw_AST_nodes
 
