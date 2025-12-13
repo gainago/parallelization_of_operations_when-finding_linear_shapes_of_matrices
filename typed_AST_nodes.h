@@ -108,7 +108,9 @@ struct TypedResult {
 
 
 TypedResult typeset(const raw_AST_nodes::Expression& expr);
-void try_precompute_numbers(TypedResult& typed_syntax_three);
+std::unique_ptr<typed_AST_nodes::TypedExpression> try_precompute_numbers(
+    std::unique_ptr<typed_AST_nodes::TypedExpression> typed_syntax_three_node);
+
 std::unique_ptr<typed_AST_nodes::NumberLiteral> precompute_numbers(
     std::unique_ptr<typed_AST_nodes::TypedExpression> number_operation );
 

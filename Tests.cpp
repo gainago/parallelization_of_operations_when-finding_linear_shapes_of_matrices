@@ -956,7 +956,7 @@ void run_tests_for_replace_unary_pluses() {
 
 void run_tests_for_normalize_tokenize_sequence() {
     {
-        std::string input = "A3 -4A4 - 5A5 + 2*-A5";
+        std::string input = "A3 -4A4 - (43 -1 -1 -1 -1*-1)5A5 -  ( 6^2*3+2)*-A5";
         std::vector<Token> tokens = tokenize(input);
         check_arithmetic_signs( tokens );
         normalize_tokenize_sequence( tokens );
@@ -968,6 +968,14 @@ void run_tests_for_normalize_tokenize_sequence() {
         //print_AST_to_file("Dot_example", *AST);
         TypedResult typed_result = typeset(*AST);
 
+        //print_AST_to_file("Dot_example", *(typed_result.node));
+        typed_result.node = try_precompute_numbers(std::move(typed_result.node));
         print_AST_to_file("Dot_example", *(typed_result.node));
     }
 }
+
+
+
+
+
+

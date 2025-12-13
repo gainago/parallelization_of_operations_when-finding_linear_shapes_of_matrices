@@ -1,6 +1,7 @@
 
 #include "typed_AST_nodes.h"
 #include <stdexcept>
+#include <cmath>
 
 typed_AST_nodes::MatrixVariable::MatrixVariable(std::string name_)
     : name(std::move(name_)) {}
@@ -228,13 +229,52 @@ TypedResult typeset(const raw_AST_nodes::Expression& expr) {
     throw std::runtime_error("Unknown expression type");
 }
 
-void try_precompute_numbers(TypedResult& typed_syntax_three_node) {
-    if( typed_syntax_three_node.type == ExprType::Number) {
-        typed_syntax_three_node.node = precompute_numbers(std::move( typed_syntax_three_node.node));
-        return;
+std::unique_ptr<typed_AST_nodes::TypedExpression> try_precompute_numbers(
+    std::unique_ptr<typed_AST_nodes::TypedExpression> typed_syntax_three_node) {
+    if(dynamic_cast<typed_AST_nodes::NumberLiteral*>(typed_syntax_three_node.get())) {
+        return typed_syntax_three_node;
+    }
+    if(dynamic_cast<typed_AST_nodes::NumberAddNumber*>(typed_syntax_three_node.get())) {
+        return precompute_numbers(std::move(typed_syntax_three_node));
+    }
+    if(dynamic_cast<typed_AST_nodes::NumberSubtractNumber*>(typed_syntax_three_node.get())) {
+        return precompute_numbers(std::move(typed_syntax_three_node));
+    }
+    if(dynamic_cast<typed_AST_nodes::NumberMultiplyNumber*>(typed_syntax_three_node.get())) {
+        return precompute_numbers(std::move(typed_syntax_three_node));
+    }
+    if(dynamic_cast<typed_AST_nodes::NumberPowerPositiveInt*>(typed_syntax_three_node.get())) {
+        return precompute_numbers(std::move(typed_syntax_three_node));
     }
 
-
+    if(auto* mat_add_mat = dynamic_cast<typed_AST_nodes::MatrixAddMatrix*>(typed_syntax_three_node.get())) {
+        return std::make_unique<typed_AST_nodes::MatrixAddMatrix>(
+            try_precompute_numbers(std::move(mat_add_mat->left)),
+            try_precompute_numbers(std::move(mat_add_mat->right))
+            );
+    }
+    if(auto* mat_mul_mat = dynamic_cast<typed_AST_nodes::MatrixMultiplyMatrix*>(typed_syntax_three_node.get())) {
+        return std::make_unique<typed_AST_nodes::MatrixMultiplyMatrix>(
+            try_precompute_numbers(std::move(mat_mul_mat->left)),
+            try_precompute_numbers(std::move(mat_mul_mat->right))
+            );
+    }
+    if(auto* mat_sub_mat = dynamic_cast<typed_AST_nodes::MatrixSubtractMatrix*>(typed_syntax_three_node.get())) {
+        return std::make_unique<typed_AST_nodes::MatrixSubtractMatrix>(
+            try_precompute_numbers(std::move(mat_sub_mat->left)),
+            try_precompute_numbers(std::move(mat_sub_mat->right))
+            );
+    }
+    if(auto* mat_pow_int = dynamic_cast<typed_AST_nodes::MatrixPowerPositiveInt*>(typed_syntax_three_node.get())) {
+        return typed_syntax_three_node;
+    }
+    if(auto* num_mul_mat = dynamic_cast<typed_AST_nodes::NumberMultiplyMatrix*>(typed_syntax_three_node.get())) {
+        return std::make_unique<typed_AST_nodes::NumberMultiplyMatrix>(
+            try_precompute_numbers(std::move(num_mul_mat->scalar)),
+            try_precompute_numbers(std::move(num_mul_mat->matrix))
+            );
+    }
+    return typed_syntax_three_node;
 }
 
 std::unique_ptr<typed_AST_nodes::NumberLiteral> precompute_numbers(
@@ -271,6 +311,8 @@ std::unique_ptr<typed_AST_nodes::NumberLiteral> precompute_numbers(
             precompute_numbers(std::move(num_power_int->base));
         std::unique_ptr<typed_AST_nodes::Exponent> exponent(
             static_cast<typed_AST_nodes::Exponent*>(num_power_int->exponent.release()));
-        return std::make_unique<typed_AST_nodes::NumberLiteral>(left->value * right->value);
+        return std::make_unique<typed_AST_nodes::NumberLiteral>(
+            std::pow(left->value, exponent->exponent) );
     }
+    throw std::runtime_error((std::string)"Can not precompute: " + number_operation->getNodeType());
 }
