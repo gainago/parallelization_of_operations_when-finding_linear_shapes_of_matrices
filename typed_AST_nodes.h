@@ -106,7 +106,11 @@ struct TypedResult {
 };
 
 
-TypedResult typecheck(const raw_AST_nodes::Expression& expr);
+
+TypedResult typeset(const raw_AST_nodes::Expression& expr);
+void try_precompute_numbers(TypedResult& typed_syntax_three);
+std::unique_ptr<typed_AST_nodes::NumberLiteral> precompute_numbers(
+    std::unique_ptr<typed_AST_nodes::TypedExpression> number_operation );
 
 
 

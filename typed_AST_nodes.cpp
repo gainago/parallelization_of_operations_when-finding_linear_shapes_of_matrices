@@ -110,7 +110,7 @@ std::string typed_AST_nodes::Exponent::getNodeType() const {
 }
 
 
-TypedResult typecheck(const raw_AST_nodes::Expression& expr) {
+TypedResult typeset(const raw_AST_nodes::Expression& expr) {
     if(auto* num = dynamic_cast<const raw_AST_nodes::NumberLiteral*>(&expr) ) {
         return {
             std::make_unique<typed_AST_nodes::NumberLiteral>( num->value) ,
@@ -124,8 +124,8 @@ TypedResult typecheck(const raw_AST_nodes::Expression& expr) {
         };
     }
     if(auto* add = dynamic_cast<const raw_AST_nodes::AddExpression*>(&expr)) {
-        TypedResult left = typecheck(*add->left);
-        TypedResult right = typecheck(*add->right);
+        TypedResult left = typeset(*add->left);
+        TypedResult right = typeset(*add->right);
         if(left.type == ExprType::Number && right.type == ExprType::Number) {
             return {
                 std::make_unique<typed_AST_nodes::NumberAddNumber>(
@@ -145,8 +145,8 @@ TypedResult typecheck(const raw_AST_nodes::Expression& expr) {
         throw std::runtime_error("Type error: cannot add number and matrix");
     }
     if (auto* sub = dynamic_cast<const raw_AST_nodes::SubtractExpression*>(&expr)) {
-        auto left = typecheck(*sub->left);
-        auto right = typecheck(*sub->right);
+        auto left = typeset(*sub->left);
+        auto right = typeset(*sub->right);
         if (left.type == ExprType::Number && right.type == ExprType::Number) {
             return {
                 std::make_unique<typed_AST_nodes::NumberSubtractNumber>(
@@ -166,8 +166,8 @@ TypedResult typecheck(const raw_AST_nodes::Expression& expr) {
         throw std::runtime_error("Type error: cannot subtract number and matrix");
     }
     if (auto* mul = dynamic_cast<const raw_AST_nodes::MultiplyExpression*>(&expr)) {
-        auto left = typecheck(*mul->left);
-        auto right = typecheck(*mul->right);
+        auto left = typeset(*mul->left);
+        auto right = typeset(*mul->right);
 
         if (left.type == ExprType::Number && right.type == ExprType::Number) {
             return {
@@ -204,7 +204,7 @@ TypedResult typecheck(const raw_AST_nodes::Expression& expr) {
         throw std::runtime_error("Type error: invalid operands for multiplication");
     }
     if (auto* pow = dynamic_cast<const raw_AST_nodes::PowerExpression*>(&expr)) {
-        auto base = typecheck(*pow->base);
+        auto base = typeset(*pow->base);
         // Exponent — всегда число, но мы его не типизируем, только проверяем значение
         int exponent = pow->exponent->exponent;
         if (base.type == ExprType::Number) {
@@ -226,4 +226,51 @@ TypedResult typecheck(const raw_AST_nodes::Expression& expr) {
         throw std::runtime_error("Type error: power base must be number or matrix");
     }
     throw std::runtime_error("Unknown expression type");
+}
+
+void try_precompute_numbers(TypedResult& typed_syntax_three_node) {
+    if( typed_syntax_three_node.type == ExprType::Number) {
+        typed_syntax_three_node.node = precompute_numbers(std::move( typed_syntax_three_node.node));
+        return;
+    }
+
+
+}
+
+std::unique_ptr<typed_AST_nodes::NumberLiteral> precompute_numbers(
+    std::unique_ptr<typed_AST_nodes::TypedExpression> number_operation ) {
+
+    if(auto* number = dynamic_cast<typed_AST_nodes::NumberLiteral*>(number_operation.get())) {
+        return std::unique_ptr<typed_AST_nodes::NumberLiteral>(
+            static_cast<typed_AST_nodes::NumberLiteral*>(number_operation.release()));
+    }
+
+    if(auto* num_add_num = dynamic_cast<typed_AST_nodes::NumberAddNumber*>(number_operation.get())) {
+        std::unique_ptr<typed_AST_nodes::NumberLiteral> left =
+            precompute_numbers(std::move(num_add_num->left));
+        std::unique_ptr<typed_AST_nodes::NumberLiteral> right =
+            precompute_numbers(std::move(num_add_num->right));
+        return std::make_unique<typed_AST_nodes::NumberLiteral>(left->value + right->value);
+    }
+    if(auto* num_sub_num = dynamic_cast<typed_AST_nodes::NumberSubtractNumber*>(number_operation.get())) {
+        std::unique_ptr<typed_AST_nodes::NumberLiteral> left =
+            precompute_numbers(std::move(num_sub_num->left));
+        std::unique_ptr<typed_AST_nodes::NumberLiteral> right =
+            precompute_numbers(std::move(num_sub_num->right));
+        return std::make_unique<typed_AST_nodes::NumberLiteral>(left->value - right->value);
+    }
+    if(auto* num_mul_num = dynamic_cast<typed_AST_nodes::NumberMultiplyNumber*>(number_operation.get())) {
+        std::unique_ptr<typed_AST_nodes::NumberLiteral> left =
+            precompute_numbers(std::move(num_mul_num->left));
+        std::unique_ptr<typed_AST_nodes::NumberLiteral> right =
+            precompute_numbers(std::move(num_mul_num->right));
+        return std::make_unique<typed_AST_nodes::NumberLiteral>(left->value * right->value);
+    }
+    if(auto* num_power_int = dynamic_cast<typed_AST_nodes::NumberPowerPositiveInt*>(number_operation.get())) {
+        std::unique_ptr<typed_AST_nodes::NumberLiteral> left =
+            precompute_numbers(std::move(num_power_int->base));
+        std::unique_ptr<typed_AST_nodes::Exponent> exponent(
+            static_cast<typed_AST_nodes::Exponent*>(num_power_int->exponent.release()));
+        return std::make_unique<typed_AST_nodes::NumberLiteral>(left->value * right->value);
+    }
 }

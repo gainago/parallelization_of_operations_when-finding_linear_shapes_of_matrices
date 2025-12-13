@@ -158,7 +158,7 @@ int Printer_to_dot<T>::visit(const T& node) {
 }
 
 template<typename T>
-void print_raw_AST_to_file(std::string filename, const T& AST) {
+void print_AST_to_file(std::string filename, const T& AST) {
     std::ofstream file(filename.c_str());
     if (file.is_open()) {
         Printer_to_dot<T> printer;

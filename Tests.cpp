@@ -965,9 +965,9 @@ void run_tests_for_normalize_tokenize_sequence() {
         // }"
         Parser parser(tokens);
         std::unique_ptr<raw_AST_nodes::Expression> AST = parser.parse();
-        //print_raw_AST_to_file("Dot_example", *AST);
-        TypedResult typed_result = typecheck(*AST);
+        //print_AST_to_file("Dot_example", *AST);
+        TypedResult typed_result = typeset(*AST);
 
-        print_raw_AST_to_file("Dot_example", *(typed_result.node));
+        print_AST_to_file("Dot_example", *(typed_result.node));
     }
 }
