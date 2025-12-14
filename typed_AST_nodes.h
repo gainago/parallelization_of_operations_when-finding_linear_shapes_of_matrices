@@ -4,6 +4,7 @@
 // typed AST nodes (no definitions needed here if not used externally)
 #include <memory>
 #include <string>
+#include <vector>
 #include "raw_AST_nodes.h"
 
 namespace typed_AST_nodes {
@@ -11,12 +12,14 @@ namespace typed_AST_nodes {
     struct TypedExpression {
         virtual ~TypedExpression() = default;
         virtual std::string getNodeType() const = 0;
+        virtual std::vector<std::unique_ptr<TypedExpression> > movDependencies() = 0;
     };
 
     struct MatrixVariable : public TypedExpression {
         std::string name;
         MatrixVariable(std::string name_);
         virtual std::string getNodeType() const override;
+        std::string getNameOfMatrix() const;
     };
 
     struct NumberLiteral : public TypedExpression {
@@ -36,6 +39,7 @@ namespace typed_AST_nodes {
         std::unique_ptr<TypedExpression> right;
         NumberAddNumber(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<std::unique_ptr<TypedExpression> > movDependencies() override;
     };
 
     struct NumberSubtractNumber : public TypedExpression {
@@ -43,6 +47,7 @@ namespace typed_AST_nodes {
         std::unique_ptr<TypedExpression> right;
         NumberSubtractNumber(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<std::unique_ptr<TypedExpression> > movDependencies() override;
     };
 
     struct NumberMultiplyNumber : public TypedExpression {

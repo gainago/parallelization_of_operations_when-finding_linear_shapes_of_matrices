@@ -10,6 +10,10 @@ std::string typed_AST_nodes::MatrixVariable::getNodeType() const {
     return (std::string)"MatrixVariable" + "(" + this->name + ")" ;
 }
 
+std::string typed_AST_nodes::MatrixVariable::getNameOfMatrix() const {
+    return this->name;
+}
+
 typed_AST_nodes::NumberLiteral::NumberLiteral(double value_)
     : value(value_) {}
 

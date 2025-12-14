@@ -16,7 +16,8 @@ add_executable(make_abstract_syntax_tree main.cpp
     raw_AST_nodes.cpp
     typed_AST_nodes.h
     typed_AST_nodes.cpp
-    printer_to_dot.h printer_to_dot.cpp)
+    printer_to_dot.h printer_to_dot.cpp
+    evaluatenode.h evaluatenode.cpp)
 
 include(GNUInstallDirs)
 install(TARGETS make_abstract_syntax_tree
