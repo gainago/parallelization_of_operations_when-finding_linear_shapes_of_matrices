@@ -30,6 +30,14 @@ std::string typed_AST_nodes::NumberAddNumber::getNodeType() const {
     return "NumberAddNumber";
 }
 
+std::vector<const typed_AST_nodes::TypedExpression* >
+    typed_AST_nodes::NumberAddNumber::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->left.get());
+    vec_to_return.push_back(this->right.get());
+    return vec_to_return;
+}
+
 typed_AST_nodes::NumberSubtractNumber::NumberSubtractNumber(
     std::unique_ptr<TypedExpression> left_,
     std::unique_ptr<TypedExpression> right_)
@@ -39,6 +47,14 @@ std::string typed_AST_nodes::NumberSubtractNumber::getNodeType() const {
     return "NumberSubtractNumber";
 }
 
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::NumberSubtractNumber::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->left.get());
+    vec_to_return.push_back(this->right.get());
+    return vec_to_return;
+}
+
 typed_AST_nodes::NumberMultiplyNumber::NumberMultiplyNumber(
     std::unique_ptr<TypedExpression> left_,
     std::unique_ptr<TypedExpression> right_)
@@ -46,6 +62,14 @@ typed_AST_nodes::NumberMultiplyNumber::NumberMultiplyNumber(
 
 std::string typed_AST_nodes::NumberMultiplyNumber::getNodeType() const {
     return "NumberMultiplyNumber";
+}
+
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::NumberMultiplyNumber::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->left.get());
+    vec_to_return.push_back(this->right.get());
+    return vec_to_return;
 }
 
 typed_AST_nodes::NumberPowerPositiveInt::NumberPowerPositiveInt(
@@ -60,6 +84,14 @@ std::string typed_AST_nodes::NumberPowerPositiveInt::getNodeType() const {
     return "NumberPowerPositiveInt";
 }
 
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::NumberPowerPositiveInt::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->base.get());
+    vec_to_return.push_back(this->exponent.get());
+    return vec_to_return;
+}
+
 typed_AST_nodes::MatrixAddMatrix::MatrixAddMatrix(
     std::unique_ptr<TypedExpression> left_,
     std::unique_ptr<TypedExpression> right_)
@@ -67,6 +99,14 @@ typed_AST_nodes::MatrixAddMatrix::MatrixAddMatrix(
 
 std::string typed_AST_nodes::MatrixAddMatrix::getNodeType() const {
     return "MatrixAddMatrix";
+}
+
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::MatrixAddMatrix::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->left.get());
+    vec_to_return.push_back(this->right.get());
+    return vec_to_return;
 }
 
 typed_AST_nodes::MatrixSubtractMatrix::MatrixSubtractMatrix(
@@ -78,6 +118,14 @@ std::string typed_AST_nodes::MatrixSubtractMatrix::getNodeType() const {
     return "MatrixSubtractMatrix";
 }
 
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::MatrixSubtractMatrix::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->left.get());
+    vec_to_return.push_back(this->right.get());
+    return vec_to_return;
+}
+
 typed_AST_nodes::MatrixMultiplyMatrix::MatrixMultiplyMatrix(
     std::unique_ptr<TypedExpression> left_,
     std::unique_ptr<TypedExpression> right_)
@@ -87,6 +135,14 @@ std::string typed_AST_nodes::MatrixMultiplyMatrix::getNodeType() const {
     return "MatrixMultiplyMatrix";
 }
 
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::MatrixMultiplyMatrix::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->left.get());
+    vec_to_return.push_back(this->right.get());
+    return vec_to_return;
+}
+
 typed_AST_nodes::NumberMultiplyMatrix::NumberMultiplyMatrix(
     std::unique_ptr<TypedExpression> scalar_,
     std::unique_ptr<TypedExpression> matrix_)
@@ -94,6 +150,14 @@ typed_AST_nodes::NumberMultiplyMatrix::NumberMultiplyMatrix(
 
 std::string typed_AST_nodes::NumberMultiplyMatrix::getNodeType() const {
     return "NumberMultiplyMatrix";
+}
+
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::NumberMultiplyMatrix::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->scalar.get());
+    vec_to_return.push_back(this->matrix.get());
+    return vec_to_return;
 }
 
 typed_AST_nodes::MatrixPowerPositiveInt::MatrixPowerPositiveInt(
@@ -107,6 +171,16 @@ typed_AST_nodes::MatrixPowerPositiveInt::MatrixPowerPositiveInt(
 std::string typed_AST_nodes::MatrixPowerPositiveInt::getNodeType() const {
     return "MatrixPowerPositiveInt";
 }
+
+
+std::vector<const typed_AST_nodes::TypedExpression* >
+typed_AST_nodes::MatrixPowerPositiveInt::movDependencies() {
+    std::vector<const typed_AST_nodes::TypedExpression*> vec_to_return;
+    vec_to_return.push_back(this->base.get());
+    vec_to_return.push_back(this->exponent.get());
+    return vec_to_return;
+}
+
 
 typed_AST_nodes::Exponent::Exponent(int exponent_) : exponent(exponent_) {}
 
