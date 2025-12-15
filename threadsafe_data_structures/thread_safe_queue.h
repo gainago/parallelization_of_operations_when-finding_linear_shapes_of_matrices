@@ -27,7 +27,7 @@ public:
 
     void push( T new_value ) {
         std::lock_guard<std::mutex> lk( mut );
-        data_container.push_back( new_value );
+        data_container.push_back(new_value);
         data_cond.notify_one();
     }
 
@@ -36,7 +36,7 @@ public:
         if( data_container.empty() ) {
             return false;
         }
-        value = data_container.front();
+        value = std::move( data_container.front() );
         data_container.pop_front();
         return true;
     }

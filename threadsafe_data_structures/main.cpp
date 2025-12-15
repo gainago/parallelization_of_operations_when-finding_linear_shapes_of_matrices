@@ -15,10 +15,15 @@ void function_to_call(function_wrapper&& fun) {
     fun();
 }
 
+void fun_to_change(std::unique_ptr<function_wrapper>& ptr_to_fun) {
+    Callable cal;
+    if(!ptr_to_fun) {
+        throw "pointer is not to empty function";
+    }
+    ptr_to_fun = std::;
+}
+
 int main() {
-    Callable callable;
-    function_wrapper wrap(callable);
-    function_to_call(std::move(wrap));
-    function_wrapper2 wrap3(callable);
+    std::unique_ptr<function_wrapper> ptr(Callable);
 
 }

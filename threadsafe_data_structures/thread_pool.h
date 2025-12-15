@@ -10,7 +10,7 @@
 
 class thread_pool {
     // use shared_ptr because try pop makes copy
-    thread_safe_queue<std::shared_ptr<function_wrapper> > pool_work_queue;
+    thread_safe_queue<std::shared_ptr<function_wrapper>> pool_work_queue;
     std::atomic<bool> done{false};
     std::vector<std::thread> threads;
 
@@ -35,14 +35,21 @@ public:
 
         std::packaged_task<result_type()> task(f);
         std::future<result_type> res( task.get_future() );
-        pool_work_queue.push( std::move( task) );
+        pool_work_queue.push( std::make_shared<function_wrapper>(std::move( task)) );
         return res;
     }
 
+    void push_task(std::shared_ptr<function_wrapper> task) {
+        pool_work_queue.push(task);
+    }
+    void push_task(function_wrapper task) {
+        pool_work_queue.push(std::make_shared<function_wrapper>(std::move(task)));
+    }
+
     void run_pending_task() {
-        std::shared_ptr<function_wrapper> task;
-        if( pool_work_queue.try_pop( task ) ) {
-            (*task)();
+        std::shared_ptr<function_wrapper> ptr_to_task;
+        if(pool_work_queue.try_pop(ptr_to_task)) {
+            (*ptr_to_task)();
         }
         else{
             std::this_thread::yield();
@@ -50,6 +57,7 @@ public:
     }
 
     ~thread_pool() {
+        done = true;
         for(size_t i = 0; i < threads.size(); ++i) {
             if(threads[i].joinable()) {
                 threads[i].join();

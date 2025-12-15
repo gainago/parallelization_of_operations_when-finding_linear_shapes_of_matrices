@@ -9,6 +9,7 @@
 #include <fstream>
 
 #include "typed_AST_nodes.h"
+#include "threadsafe_data_structures/thread_pool.h"
 
 class Matrix {
     size_t count_rows;
@@ -63,59 +64,57 @@ Matrix getMatrix(std::string name_of_matrix) {
 
 //supports only constant precomputed Typed Syntax Three nodes
 
-// class EvaluateTree {
-//     struct EvaluateNode
-//     {
-//         std::atomic<bool> is_evaluated{false};
-//         std::unique_ptr<EvaluateNode> left;
-//         std::unique_ptr<EvaluateNode> right;
-//         std::unique_ptr<typed_AST_nodes::TypedExpression> expression;
-//         std::mutex mut;
-//         std::variant<double, Matrix> cached_result;
+class EvaluateTree {
+    thread_pool pool;
+    class EvaluateNode {
+    protected:
+        virtual ~EvaluateNode() = default;
+        ExprType type;
 
-//         EvaluateNode(std::unique_ptr<typed_AST_nodes::TypedExpression> node) {
-//             if(auto* matrix_var = dynamic_cast<typed_AST_nodes::MatrixVariable*>(node.get())) {
-//                 is_evaluated.store(true);
-//                 left = nullptr;
-//                 right = nullptr;
-//                 expression = std::move(node);
+        std::unique_ptr<std::variant<int, double, Matrix> > result; // for heavy values
+        std::atomic<bool> is_calculated{false};
+        std::mutex mut;
+        std::weak_ptr<EvaluateNode> parent_weak;
+        std::chrono::milliseconds consumed_time{0};
+        std::shared_ptr<thread_pool> ptr_to_pool;
+        virtual void make_special_operation() = 0;
+        virtual bool is_dependencies_calculated() = 0;
 
-//             }
-//         }
-//     };
+    public:
+        bool calculate() {
 
-//     std::unique_ptr<EvaluateNode> root;
-
-
-// public:
-//     EvaluateTree(std::unique_ptr<typed_AST_nodes::TypedExpression> root_) {
-//         root = std::make_unique<EvaluateNode>(std::move(root_));
-//     }
-// };
-
-
-class EvaluateNode {
-protected:
-    virtual ~EvaluateNode() = default;
-    ExprType type;
-    std::unique_ptr<std::variant<int, double, Matrix> > result; // for heavy values calculate only once
-    std::atomic<bool> is_calculated{false};
-    std::mutex mut;
-    std::shared_ptr<EvaluateNode> parent;
-    virtual void make_special_operation() = 0;
-    virtual bool is_dependencies_calculated() = 0;
-public:
-    void calculate() {
-        // check all child are they calculated
-        if(!is_dependencies_calculated()) {
-            throw std::runtime_error("Dependencies is not calculated");
+            if(is_calculated.load()) {  //theese checks useless in corrept putting in task_pool,
+                return true;
+            }
+            std::lock_guard<std::mutex> lock(mut);
+            if(is_calculated.load()) {  // but saves when we put task twice
+                return true;
+            }
+            if(!is_dependencies_calculated()) { // check all child are they all calculated
+                return false;
+            }
+            make_special_operation();
+            is_calculated.store(true);
+            if(std::shared_ptr<EvaluateNode> parent_shared = parent_weak.lock()) {
+                if(parent_shared->is_dependencies_calculated()) {   //if parent is ready,
+                    auto lambda = [parent_shared]() {               //them push them to pool
+                        parent_shared->calculate();
+                    };
+                    ptr_to_pool->push_task(std::move(lambda));
+                }
+            }
+            return true;
         }
-        // calculate value
-        make_special_operation();
-        is_calculated.store(true);
-    }
+    };
+
+    std::shared_ptr<EvaluateNode> root;
+public:
+    EvaluateTree(typed_AST_nodes::TypedExpression* root_) { //called program guaranty
+        root = std::make_shared<EvaluateNode>(root_);            //than typed AST tree
+    }                                                                       // will be avialiable
 };
 
-class
+std::shared_ptr<EvaluateTree::EvaluateNode> make_Node(typed_AST_nodes::TypedExpression* root_) {}
+
 
 #endif // EVALUATENODE_H

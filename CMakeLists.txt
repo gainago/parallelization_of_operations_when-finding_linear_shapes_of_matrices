@@ -17,7 +17,7 @@ add_executable(make_abstract_syntax_tree main.cpp
     tests/Tests.cpp tests/Tests.h
     Tokens/Tokens.cpp Tokens/Tokens.h
     threadsafe_data_structures/thread_safe_queue.h
-    threadsafe_data_structures/thread_pull.h
+    threadsafe_data_structures/thread_pool.h
     threadsafe_data_structures/function_wrapper.h
     threadsafe_data_structures/main.cpp)
 
