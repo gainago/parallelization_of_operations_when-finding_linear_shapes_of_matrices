@@ -65,22 +65,33 @@ Matrix getMatrix(std::string name_of_matrix) {
 //supports only constant precomputed Typed Syntax Three nodes
 
 class EvaluateTree {
+public:
+    class Node;
+private:
     thread_pool pool;
-    class EvaluateNode {
+    static std::shared_ptr<EvaluateTree::Node> make_evaluate_node(
+        typed_AST_nodes::TypedExpression* typed_node,
+        std::weak_ptr<EvaluateTree::Node> parent_weak_,
+        std::shared_ptr<thread_pool> ptr_to_pool_
+    );
+public:
+    class Node {
     protected:
-        virtual ~EvaluateNode() = default;
+        virtual ~Node() = default;
         ExprType type;
 
         std::unique_ptr<std::variant<int, double, Matrix> > result; // for heavy values
+        std::string expression;
         std::atomic<bool> is_calculated{false};
+        std::weak_ptr<Node> parent_weak;
         std::mutex mut;
-        std::weak_ptr<EvaluateNode> parent_weak;
         std::chrono::milliseconds consumed_time{0};
         std::shared_ptr<thread_pool> ptr_to_pool;
         virtual void make_special_operation() = 0;
         virtual bool is_dependencies_calculated() = 0;
 
     public:
+        virtual std::string get_node_type() const = 0;
         bool calculate() {
 
             if(is_calculated.load()) {  //theese checks useless in corrept putting in task_pool,
@@ -107,14 +118,101 @@ class EvaluateTree {
         }
     };
 
-    std::shared_ptr<EvaluateNode> root;
+    class NumberLiteral;
+    class MatrixVariable;
+    class Exponent;
+    class MatrixAddMatrix;
+    class MatrixSubtractMatrix;
+    class MatrixMultiplyMatrix;
+    class NumberMultiplyMatrix;
+    class MatrixPowerPositiveInt;
+
+    std::shared_ptr<Node> root;
 public:
     EvaluateTree(typed_AST_nodes::TypedExpression* root_) { //called program guaranty
         root = std::make_shared<EvaluateNode>(root_);            //than typed AST tree
     }                                                                       // will be avialiable
 };
 
-std::shared_ptr<EvaluateTree::EvaluateNode> make_Node(typed_AST_nodes::TypedExpression* root_) {}
+std::shared_ptr<EvaluateTree::Node> make_evaluate_node/*(
+    typed_AST_nodes::TypedExpression* typed_node,
+    std::weak_ptr<EvaluateTree::EvaluateNode> previous) {
+    if(auto* num = dynamic_cast<typed_AST_nodes::NumberLiteral*>(typed_node) ) {
+        return
+    }
+}*/;
 
+class EvaluateTree::NumberLiteral : public EvaluateTree::Node {
+public:
+    NumberLiteral(typed_AST_nodes::NumberLiteral* const typed_node,
+                              std::weak_ptr<EvaluateTree::Node> parent_weak_,
+                              std::shared_ptr<thread_pool> ptr_to_pool_) {
+        result = std::make_unique<std::variant<int, double, Matrix> >(typed_node->value);
+        expression = typed_node->getNodeType();
+        is_calculated.store(true);
+        parent_weak = parent_weak_;
+        ptr_to_pool = ptr_to_pool_;
+    }
 
+    std::string get_node_type() const override {
+        return expression;
+    }
+};
+
+class EvaluateTree::Exponent : public EvaluateTree::Node {
+public:
+    Exponent(typed_AST_nodes::Exponent* const typed_node,
+                              std::weak_ptr<EvaluateTree::Node> parent_weak_,
+                              std::shared_ptr<thread_pool> ptr_to_pool_) {
+        result = std::make_unique<std::variant<int, double, Matrix> >(typed_node->exponent);
+        expression = typed_node->getNodeType();
+        is_calculated.store(true);
+        parent_weak = parent_weak_;
+        ptr_to_pool = ptr_to_pool_;
+    }
+
+    std::string get_node_type() const override {
+        return expression;
+    }
+};
+
+class EvaluateTree::MatrixVariable : public EvaluateTree::Node {
+public:
+    MatrixVariable(typed_AST_nodes::MatrixVariable* const typed_node,
+                         std::weak_ptr<EvaluateTree::Node> parent_weak_,
+                         std::shared_ptr<thread_pool> ptr_to_pool_) {
+        result = std::make_unique<std::variant<int, double, Matrix> >(getMatrix(typed_node->name));
+        expression = typed_node->getNodeType();
+        is_calculated.store(true);
+        parent_weak = parent_weak_;
+        ptr_to_pool = ptr_to_pool_;
+    }
+
+    std::string get_node_type() const override {
+        return expression;
+    }
+};
+
+class EvaluateTree::MatrixAddMatrix : public EvaluateTree::Node {
+    std::shared_ptr<EvaluateTree::Node> left;
+    std::shared_ptr<EvaluateTree::Node> right;
+public:
+    MatrixAddMatrix(typed_AST_nodes::MatrixAddMatrix* const typed_node,
+                   std::weak_ptr<EvaluateTree::Node> parent_weak_,
+                   std::shared_ptr<thread_pool> ptr_to_pool_) {
+        expression = typed_node->getNodeType();
+        is_calculated.store(false);
+        parent_weak = parent_weak_;
+        ptr_to_pool = ptr_to_pool_;
+        std::shared_ptr<EvaluateTree::MatrixAddMatrix> ptr_to_return(this);
+        left = EvaluateTree::make_evaluate_node(
+            typed_node->left.get(),
+            std::make_weak,
+            ptr_to_pool_);
+    }
+
+    std::string get_node_type() const override {
+        return expression;
+    }
+};
 #endif // EVALUATENODE_H
