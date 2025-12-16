@@ -13,13 +13,16 @@ add_executable(make_abstract_syntax_tree main.cpp
     typed_AST_nodes.h
     typed_AST_nodes.cpp
     printer_to_dot.h printer_to_dot.cpp
-    evaluatenode.h evaluatenode.cpp
+
     tests/Tests.cpp tests/Tests.h
     Tokens/Tokens.cpp Tokens/Tokens.h
     threadsafe_data_structures/thread_safe_queue.h
     threadsafe_data_structures/thread_pool.h
     threadsafe_data_structures/function_wrapper.h
-    threadsafe_data_structures/main.cpp)
+    threadsafe_data_structures/main.cpp
+    matrix.h matrix.cpp
+    evaluatenode.h
+    evaluatenode.cpp)
 
 include(GNUInstallDirs)
 install(TARGETS make_abstract_syntax_tree
