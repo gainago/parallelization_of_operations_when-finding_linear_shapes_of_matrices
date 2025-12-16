@@ -32,6 +32,14 @@ public:
         data = std::move(other.data);
         return *this;
     }
+    Matrix(Matrix const& other) {
+        this->data.resize(other.count_columns * other.count_rows);
+        this->count_columns = other.count_columns;
+        this->count_rows = other.count_rows;
+        for(size_t i = 0; i < other.data.size(); i++) {
+            this->data[i] = other.data[i];
+        }
+    }
     size_t getCountOfRows() const {
         return this->count_rows;
     }

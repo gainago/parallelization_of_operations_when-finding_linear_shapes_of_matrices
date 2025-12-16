@@ -3,11 +3,11 @@
 #include "matrix.h"
 
 Matrix getMatrix(std::string name_of_matrix) {
-    std::string full_name = "../../" + name_of_matrix;
+    std::string full_name = "../../" + name_of_matrix + ".txt";
     std::ifstream ifs(full_name);
-    const size_t dimension = 2;
+    const size_t dimension = 1000;
     if(!ifs) {
-        std::runtime_error("Could not open file:" + full_name);
+        throw std::runtime_error("Could not open file:" + full_name);
     }
     Matrix matrix(dimension, dimension);
     for( size_t i = 0; i < dimension; i++) {
@@ -22,18 +22,17 @@ Matrix getMatrix(std::string name_of_matrix) {
 }
 
 void saveMatrixToFile(Matrix&& matrix, std::string file_name) {
-    std::string full_name = "../../Matrices/" + file_name;
+    std::string full_name = "../../" + file_name + ".txt";
     std::ofstream ofs(full_name);
     if(!ofs) {
-        std::runtime_error("Could not open file" + full_name);
+        throw std::runtime_error("Could not open file" + full_name);
     }
     for( size_t i = 0; i < matrix.getCountOfRows(); i++) {
         for( size_t j = 0; j < matrix.getCountOfColumns(); j++) {
             ofs << matrix.get_element(i, j);
+            ofs << "\n";
         }
-        ofs << "\n";
     }
-    ofs.close();
 }
 
 Matrix Matrix::operator*(Matrix const& other) const {
@@ -98,9 +97,9 @@ Matrix Matrix::power_positive_int(Matrix const& matrix, int exponent) {
     if(exponent < 1) {
         std::runtime_error("Invalid exponent value");
     }
-    Matrix mat_to_return(matrix.count_rows, matrix.count_columns);
-    for(int i = 0; i < exponent; i++) {
-        mat_to_return = matrix * matrix;
+    Matrix mat_to_return = matrix;
+    for(int i = 1; i < exponent; i++) {
+        mat_to_return = matrix * mat_to_return;
     }
     return mat_to_return;
 }

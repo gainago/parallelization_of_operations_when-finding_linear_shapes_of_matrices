@@ -45,7 +45,10 @@ bool Node::calculate() {
         std::cout << "Called calculate for: " << this->get_node_type() << " , ";
         std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
     }
+    auto start = std::chrono::high_resolution_clock::now();
     make_special_operation();
+    auto end = std::chrono::high_resolution_clock::now();
+    consumed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     is_calculated.store(true); //sets twice, but it is do not wrong, and makes code more readable
 
     if (auto parent_shared = parent_weak.lock()) {
@@ -286,12 +289,16 @@ std::shared_ptr<Node> make_evaluate_node(
 }
 
 EvaluateTree::EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root) {
-    pool = std::make_shared<thread_pool>(1);
     auto start = std::chrono::high_resolution_clock::now();
-    root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
-    root->calculate(); // it will recursively push other tasks in pool
-    pool->wait();
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    {
+        pool = std::make_shared<thread_pool>(10);
+
+        root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
+        root->calculate(); // it will recursively push other tasks in pool
+        while(!root->is_calculated_flag()) {
+            std::this_thread::yield();
+        }
+    } //to destroy pool automatically
     std::variant<int, double, Matrix> result = root->get_result();
     saveMatrixToFile(std::move(std::get<Matrix>(result)), "Result");
     auto end = std::chrono::high_resolution_clock::now();

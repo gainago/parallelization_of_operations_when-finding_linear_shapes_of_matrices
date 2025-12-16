@@ -29,7 +29,7 @@ protected:
 
     virtual void make_special_operation() = 0;
     virtual bool is_dependencies_calculated() = 0;
-    virtual std::vector<std::shared_ptr<Node> > get_dependencies() = 0;
+
 
 public:
     bool is_calculated_flag() const {
@@ -41,6 +41,7 @@ public:
         }
         return std::move(result);
     }
+    virtual std::vector<std::shared_ptr<Node> > get_dependencies() = 0;
     virtual std::string get_node_type() const = 0;
     bool calculate();
 
@@ -57,10 +58,22 @@ class EvaluateTree {
     std::shared_ptr<thread_pool> pool;
     std::shared_ptr<Node> root;
     std::variant<double, Matrix> result;
+    void add_nodes(std::vector<std::shared_ptr<Node> >& vec) {
+
+    }
 
 public:
     EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root);
     std::shared_ptr<Node> get_root() const { return root; }
+    std::vector<std::shared_ptr<Node> > get_all_nodes() {
+        std::vector<std::shared_ptr<Node> > vec_to_ret;
+        vec_to_ret.push_back(root);
+        for( size_t i = 0; i < vec_to_ret.size(); ++i) {
+            std::vector<std::shared_ptr<Node> > new_dependencies = vec_to_ret[i].get()->get_dependencies();
+            vec_to_ret.insert(vec_to_ret.end(), new_dependencies.begin(), new_dependencies.end());
+        }
+        return vec_to_ret;
+    }
     // Можно добавить метод evaluate(), если нужно
 };
 

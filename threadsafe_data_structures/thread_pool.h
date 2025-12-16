@@ -4,6 +4,7 @@
 #include <atomic>
 #include <functional>
 #include <future>
+#include <iostream>
 
 #include "thread_safe_queue.h"
 #include "function_wrapper.h"
@@ -13,6 +14,7 @@ class thread_pool {
     thread_safe_queue<std::shared_ptr<function_wrapper>> pool_work_queue;
     std::atomic<bool> done{false};
     std::vector<std::thread> threads;
+
 
     void worker_thread() {
         while( !done ) {
@@ -48,7 +50,7 @@ public:
 
     void run_pending_task() {
         std::shared_ptr<function_wrapper> ptr_to_task;
-        if(pool_work_queue.try_pop(ptr_to_task)) {
+        if(pool_work_queue.try_pop(ptr_to_task)) {    
             (*ptr_to_task)();
         }
         else{

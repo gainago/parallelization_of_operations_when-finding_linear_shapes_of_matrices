@@ -957,7 +957,7 @@ void run_tests_for_replace_unary_pluses() {
 
 void run_tests_for_normalize_tokenize_sequence() {
     {
-        std::string input = "A3 -4A4 - (43 -1 -1 -1 -1*-1)5A5 - ( 6^2*3+2)*-A5";
+        std::string input = "A3^5*A5 - A1^2 + A4^3+ -A1 + (22-13)A3";
         std::vector<Token> tokens = tokenize(input);
         check_arithmetic_signs( tokens );
         normalize_tokenize_sequence( tokens );
