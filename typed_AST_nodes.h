@@ -4,6 +4,7 @@
 // typed AST nodes (no definitions needed here if not used externally)
 #include <memory>
 #include <string>
+#include <vector>
 #include "raw_AST_nodes.h"
 
 namespace typed_AST_nodes {
@@ -11,12 +12,19 @@ namespace typed_AST_nodes {
     struct TypedExpression {
         virtual ~TypedExpression() = default;
         virtual std::string getNodeType() const = 0;
+
+    };
+
+    struct TypedExpressionWithDependencies : TypedExpression {
+        virtual ~TypedExpressionWithDependencies() = default;
+        virtual std::vector<const TypedExpression*> movDependencies() = 0;
     };
 
     struct MatrixVariable : public TypedExpression {
         std::string name;
         MatrixVariable(std::string name_);
         virtual std::string getNodeType() const override;
+        std::string getNameOfMatrix() const;
     };
 
     struct NumberLiteral : public TypedExpression {
@@ -31,67 +39,76 @@ namespace typed_AST_nodes {
         std::string getNodeType() const override;
     };
 
-    struct NumberAddNumber : public TypedExpression {
+    struct NumberAddNumber : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> left;
         std::unique_ptr<TypedExpression> right;
         NumberAddNumber(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct NumberSubtractNumber : public TypedExpression {
+    struct NumberSubtractNumber : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> left;
         std::unique_ptr<TypedExpression> right;
         NumberSubtractNumber(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct NumberMultiplyNumber : public TypedExpression {
+    struct NumberMultiplyNumber : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> left;
         std::unique_ptr<TypedExpression> right;
         NumberMultiplyNumber(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct NumberPowerPositiveInt : public TypedExpression {
+    struct NumberPowerPositiveInt : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> base;
         std::unique_ptr<Exponent> exponent;
         NumberPowerPositiveInt(std::unique_ptr<TypedExpression> base_, std::unique_ptr<Exponent> exponent_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct MatrixAddMatrix : public TypedExpression {
+    struct MatrixAddMatrix : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> left;
         std::unique_ptr<TypedExpression> right;
         MatrixAddMatrix(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct MatrixSubtractMatrix : public TypedExpression {
+    struct MatrixSubtractMatrix : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> left;
         std::unique_ptr<TypedExpression> right;
         MatrixSubtractMatrix(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct MatrixMultiplyMatrix : public TypedExpression {
+    struct MatrixMultiplyMatrix : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> left;
         std::unique_ptr<TypedExpression> right;
         MatrixMultiplyMatrix(std::unique_ptr<TypedExpression> left_, std::unique_ptr<TypedExpression> right_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct NumberMultiplyMatrix : public TypedExpression {
+    struct NumberMultiplyMatrix : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> scalar;
         std::unique_ptr<TypedExpression> matrix;
         NumberMultiplyMatrix(std::unique_ptr<TypedExpression> scalar_, std::unique_ptr<TypedExpression> matrix_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
-    struct MatrixPowerPositiveInt : public TypedExpression {
+    struct MatrixPowerPositiveInt : public TypedExpressionWithDependencies {
         std::unique_ptr<TypedExpression> base;
         std::unique_ptr<Exponent> exponent;
         MatrixPowerPositiveInt(std::unique_ptr<TypedExpression> base_, std::unique_ptr<Exponent> exponent_);
         std::string getNodeType() const override;
+        std::vector<const TypedExpression*> movDependencies() override;
     };
 
 }
@@ -108,7 +125,9 @@ struct TypedResult {
 
 
 TypedResult typeset(const raw_AST_nodes::Expression& expr);
-void try_precompute_numbers(TypedResult& typed_syntax_three);
+std::unique_ptr<typed_AST_nodes::TypedExpression> try_precompute_numbers(
+    std::unique_ptr<typed_AST_nodes::TypedExpression> typed_syntax_three_node);
+
 std::unique_ptr<typed_AST_nodes::NumberLiteral> precompute_numbers(
     std::unique_ptr<typed_AST_nodes::TypedExpression> number_operation );
 

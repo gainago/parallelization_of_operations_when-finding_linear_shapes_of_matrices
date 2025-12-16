@@ -5,6 +5,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "evaluatenode.h"
 #include "raw_AST_nodes.h"
 #include "typed_AST_nodes.h"
 
@@ -157,6 +158,22 @@ int Printer_to_dot<T>::visit(const T& node) {
     }
 }
 
+template<>
+class Printer_to_dot<std::shared_ptr<EvaluateTree::Node>> {
+    std::ostringstream dot_;
+    int node_counter_ = 0;
+
+    int nextId();
+    std::string escapeQuotes(std::string label);
+
+    // Объявите visit, но не определяйте его в заголовке!
+    int visit(const std::shared_ptr<EvaluateTree::Node>& node);
+
+public:
+    void print(const std::shared_ptr<EvaluateTree::Node>& root);
+    std::string str() const;
+};
+
 template<typename T>
 void print_AST_to_file(std::string filename, const T& AST) {
     std::ofstream file(filename.c_str());
@@ -167,6 +184,8 @@ void print_AST_to_file(std::string filename, const T& AST) {
         file.close();
     }
 }
+
+
 
 
 #endif // PRINTER_TO_DOT_H
