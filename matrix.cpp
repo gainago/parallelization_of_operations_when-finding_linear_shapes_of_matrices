@@ -3,8 +3,12 @@
 #include "matrix.h"
 
 Matrix getMatrix(std::string name_of_matrix) {
-    std::ifstream ifs("../../Matrices/" + name_of_matrix);
-    const size_t dimension = 10;
+    std::string full_name = "../../" + name_of_matrix;
+    std::ifstream ifs(full_name);
+    const size_t dimension = 2;
+    if(!ifs) {
+        std::runtime_error("Could not open file:" + full_name);
+    }
     Matrix matrix(dimension, dimension);
     for( size_t i = 0; i < dimension; i++) {
         for( size_t j = 0; j < dimension; j++) {
@@ -13,7 +17,23 @@ Matrix getMatrix(std::string name_of_matrix) {
                 matrix.set_element(i, j, current_value);
         }
     }
+    ifs.close();
     return matrix;
+}
+
+void saveMatrixToFile(Matrix&& matrix, std::string file_name) {
+    std::string full_name = "../../Matrices/" + file_name;
+    std::ofstream ofs(full_name);
+    if(!ofs) {
+        std::runtime_error("Could not open file" + full_name);
+    }
+    for( size_t i = 0; i < matrix.getCountOfRows(); i++) {
+        for( size_t j = 0; j < matrix.getCountOfColumns(); j++) {
+            ofs << matrix.get_element(i, j);
+        }
+        ofs << "\n";
+    }
+    ofs.close();
 }
 
 Matrix Matrix::operator*(Matrix const& other) const {

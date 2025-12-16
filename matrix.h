@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 class Matrix {
     size_t count_rows;
@@ -31,7 +32,13 @@ public:
         data = std::move(other.data);
         return *this;
     }
+    size_t getCountOfRows() const {
+        return this->count_rows;
+    }
 
+    size_t getCountOfColumns() const {
+        return this->count_columns;
+    }
     double get_element(size_t row_index, size_t column_index) const {
         if( row_index >= count_rows || column_index >= count_columns) {
             throw std::invalid_argument("Position is out of the matrix");
@@ -54,5 +61,5 @@ public:
 };
 
 Matrix getMatrix(std::string name_of_matrix);
-
+void saveMatrixToFile(Matrix&& mat, std::string file_name);
 #endif // MATRIX_H

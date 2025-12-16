@@ -10,6 +10,8 @@
 #include "threadsafe_data_structures/thread_pool.h"
 #include "matrix.h"
 
+
+
 namespace EvaluateTree {
 
 class Node : public std::enable_shared_from_this<Node> {
@@ -27,6 +29,7 @@ protected:
 
     virtual void make_special_operation() = 0;
     virtual bool is_dependencies_calculated() = 0;
+    virtual std::vector<std::shared_ptr<Node> > get_dependencies() = 0;
 
 public:
     bool is_calculated_flag() const {
@@ -40,18 +43,9 @@ public:
     }
     virtual std::string get_node_type() const = 0;
     bool calculate();
+
+
 };
-
-// Nodes to Evaluate Tree
-class NumberLiteral;
-class MatrixVariable;
-class Exponent;
-class MatrixAddMatrix;
-class MatrixSubtractMatrix;
-class MatrixMultiplyMatrix;
-class NumberMultiplyMatrix;
-class MatrixPowerPositiveInt;
-
 
 std::shared_ptr<Node> make_evaluate_node(
     const typed_AST_nodes::TypedExpression* typed_node,
@@ -62,11 +56,233 @@ std::shared_ptr<Node> make_evaluate_node(
 class EvaluateTree {
     std::shared_ptr<thread_pool> pool;
     std::shared_ptr<Node> root;
+    std::variant<double, Matrix> result;
 
 public:
-    EvaluateTree(typed_AST_nodes::TypedExpression* ast_root);
+    EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root);
     std::shared_ptr<Node> get_root() const { return root; }
     // Можно добавить метод evaluate(), если нужно
+};
+
+class NumberLiteral : public Node {
+    void init(const typed_AST_nodes::NumberLiteral* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<NumberLiteral> create(
+        const typed_AST_nodes::NumberLiteral* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        return std::vector<std::shared_ptr<Node> >();
+    }
+
+    std::string get_node_type() const override {
+        return expression; // или expression, но лучше фиксированное имя
+    }
+
+    bool is_dependencies_calculated() override { return true; }
+    void make_special_operation() override {} // уже вычислено
+};
+
+class MatrixVariable : public Node {
+    void init(const typed_AST_nodes::MatrixVariable* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<MatrixVariable> create(
+        const typed_AST_nodes::MatrixVariable* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        return std::vector<std::shared_ptr<Node> >();
+    }
+
+    std::string get_node_type() const override { return expression; }
+    bool is_dependencies_calculated() override { return true; }
+    void make_special_operation() override {}
+};
+
+class Exponent : public Node {
+    void init(const typed_AST_nodes::Exponent* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<Exponent> create(
+        const typed_AST_nodes::Exponent* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        return std::vector<std::shared_ptr<Node> >();
+    }
+
+    std::string get_node_type() const override { return expression; }
+    bool is_dependencies_calculated() override { return true; }
+    void make_special_operation() override {}
+};
+
+class MatrixAddMatrix : public Node {
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
+
+    void init(const typed_AST_nodes::MatrixAddMatrix* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<MatrixAddMatrix> create(
+        const typed_AST_nodes::MatrixAddMatrix* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        std::vector<std::shared_ptr<Node> > vec_to_return;
+        vec_to_return.push_back(left);
+        vec_to_return.push_back(right);
+        return vec_to_return;
+    }
+    std::string get_node_type() const override {return expression;}
+    bool is_dependencies_calculated() override {
+        return left->is_calculated_flag() && right->is_calculated_flag();
+    }
+
+    const std::shared_ptr<Node>& get_left() { return left; }
+    const std::shared_ptr<Node>& get_right() { return right; }
+
+    void make_special_operation() override;
+};
+
+class MatrixSubtractMatrix : public Node {
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
+
+    void init(const typed_AST_nodes::MatrixSubtractMatrix* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<MatrixSubtractMatrix> create(
+        const typed_AST_nodes::MatrixSubtractMatrix* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        std::vector<std::shared_ptr<Node> > vec_to_return;
+        vec_to_return.push_back(left);
+        vec_to_return.push_back(right);
+        return vec_to_return;
+    }
+
+    std::string get_node_type() const override {return expression;}
+    bool is_dependencies_calculated() override {
+        return left->is_calculated_flag() && right->is_calculated_flag();
+    }
+
+    const std::shared_ptr<Node>& get_left() { return left; }
+    const std::shared_ptr<Node>& get_right() { return right; }
+
+    void make_special_operation() override;
+};
+
+class MatrixMultiplyMatrix : public Node {
+    std::shared_ptr<Node> left;
+    std::shared_ptr<Node> right;
+
+    void init(const typed_AST_nodes::MatrixMultiplyMatrix* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<MatrixMultiplyMatrix> create(
+        const typed_AST_nodes::MatrixMultiplyMatrix* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        std::vector<std::shared_ptr<Node> > vec_to_return;
+        vec_to_return.push_back(left);
+        vec_to_return.push_back(right);
+        return vec_to_return;
+    }
+
+    std::string get_node_type() const override {return expression;}
+    bool is_dependencies_calculated() override {
+        return left->is_calculated_flag() && right->is_calculated_flag();
+    }
+
+    const std::shared_ptr<Node>& get_left() { return left; }
+    const std::shared_ptr<Node>& get_right() { return right; }
+
+    void make_special_operation() override;
+};
+
+class NumberMultiplyMatrix : public Node {
+    std::shared_ptr<Node> scalar;
+    std::shared_ptr<Node> matrix;
+
+    void init(const typed_AST_nodes::NumberMultiplyMatrix* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<NumberMultiplyMatrix> create(
+        const typed_AST_nodes::NumberMultiplyMatrix* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        std::vector<std::shared_ptr<Node> > vec_to_return;
+        vec_to_return.push_back(scalar);
+        vec_to_return.push_back(matrix);
+        return vec_to_return;
+    }
+
+    std::string get_node_type() const override {return expression;}
+    bool is_dependencies_calculated() override {
+        return scalar->is_calculated_flag() && matrix->is_calculated_flag();
+    }
+
+    const std::shared_ptr<Node>& get_scalar() { return scalar; }
+    const std::shared_ptr<Node>& get_matrix() { return matrix; }
+
+    void make_special_operation() override;
+};
+
+class MatrixPowerPositiveInt : public Node {
+    std::shared_ptr<Node> base;
+    std::shared_ptr<Node> exponent;
+
+    void init(const typed_AST_nodes::MatrixPowerPositiveInt* typed_node,
+              std::weak_ptr<Node> parent,
+              std::shared_ptr<thread_pool> pool);
+
+public:
+    static std::shared_ptr<MatrixPowerPositiveInt> create(
+        const typed_AST_nodes::MatrixPowerPositiveInt* typed_node,
+        std::weak_ptr<Node> parent,
+        std::shared_ptr<thread_pool> pool);
+
+    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+        std::vector<std::shared_ptr<Node> > vec_to_return;
+        vec_to_return.push_back(base);
+        vec_to_return.push_back(exponent);
+        return vec_to_return;
+    }
+
+    std::string get_node_type() const override {return expression;}
+    bool is_dependencies_calculated() override {
+        return base->is_calculated_flag() && exponent->is_calculated_flag();
+    }
+
+    const std::shared_ptr<Node>& get_base() { return base; }
+    const std::shared_ptr<Node>& get_exponent() { return exponent; }
+
+    void make_special_operation() override;
 };
 
 } // namespace EvaluateTree

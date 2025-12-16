@@ -2,9 +2,10 @@
 #include <iostream>
 
 #include "Tests.h"
-#include "Tokens.h"
-#include "parser.h"
-#include "printer_to_dot.h"
+#include "../Tokens/Tokens.h"
+#include "../parser.h"
+#include "../printer_to_dot.h"
+#include "../evaluatenode.h"
 
 void run_tests_for_tokenize() {
     std::string input = "44A1 + (13)( 52 * 34 - 2)A2^34 - A5";
@@ -956,7 +957,7 @@ void run_tests_for_replace_unary_pluses() {
 
 void run_tests_for_normalize_tokenize_sequence() {
     {
-        std::string input = "A3 -4A4 - (43 -1 -1 -1 -1*-1)5A5 -  ( 6^2*3+2)*-A5";
+        std::string input = "A3 -4A4 - (43 -1 -1 -1 -1*-1)5A5 - ( 6^2*3+2)*-A5";
         std::vector<Token> tokens = tokenize(input);
         check_arithmetic_signs( tokens );
         normalize_tokenize_sequence( tokens );
@@ -970,7 +971,12 @@ void run_tests_for_normalize_tokenize_sequence() {
 
         //print_AST_to_file("Dot_example", *(typed_result.node));
         typed_result.node = try_precompute_numbers(std::move(typed_result.node));
-        print_AST_to_file("Dot_example", *(typed_result.node));
+        //print_AST_to_file("Dot_example", *(typed_result.node));
+
+        EvaluateTree::EvaluateTree tree(typed_result.node.get());
+        print_AST_to_file("Dot_example", tree.get_root());
+
+
     }
 }
 

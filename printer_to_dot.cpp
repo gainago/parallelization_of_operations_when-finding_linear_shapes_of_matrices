@@ -9,7 +9,7 @@
 // Обратите внимание: в printer_to_dot.h должна быть объявлена эта специализация (без тела методов)
 
 // Вспомогательная функция для экранирования кавычек (можно также сделать методом класса)
-std::string escapeQuotes(std::string label) {
+std::string Printer_to_dot<std::shared_ptr<EvaluateTree::Node>>::escapeQuotes(std::string label) {
     size_t pos = 0;
     while ((pos = label.find('"', pos)) != std::string::npos) {
         label.replace(pos, 1, "\\\"");
@@ -36,32 +36,32 @@ int Printer_to_dot<std::shared_ptr<EvaluateTree::Node>>::visit(
 
     // Обработка каждого типа узла
     if (auto add = std::dynamic_pointer_cast<EvaluateTree::MatrixAddMatrix>(node)) {
-        int leftId = visit(add->left);
-        int rightId = visit(add->right);
+        int leftId = visit(add->get_left());
+        int rightId = visit(add->get_right());
         if (leftId != -1) dot_ << "    " << id << " -> " << leftId << ";\n";
         if (rightId != -1) dot_ << "    " << id << " -> " << rightId << ";\n";
     }
     else if (auto sub = std::dynamic_pointer_cast<EvaluateTree::MatrixSubtractMatrix>(node)) {
-        int leftId = visit(sub->left);
-        int rightId = visit(sub->right);
+        int leftId = visit(sub->get_left());
+        int rightId = visit(sub->get_right());
         if (leftId != -1) dot_ << "    " << id << " -> " << leftId << ";\n";
         if (rightId != -1) dot_ << "    " << id << " -> " << rightId << ";\n";
     }
     else if (auto mul = std::dynamic_pointer_cast<EvaluateTree::MatrixMultiplyMatrix>(node)) {
-        int leftId = visit(mul->left);
-        int rightId = visit(mul->right);
+        int leftId = visit(mul->get_left());
+        int rightId = visit(mul->get_right());
         if (leftId != -1) dot_ << "    " << id << " -> " << leftId << ";\n";
         if (rightId != -1) dot_ << "    " << id << " -> " << rightId << ";\n";
     }
     else if (auto numMul = std::dynamic_pointer_cast<EvaluateTree::NumberMultiplyMatrix>(node)) {
-        int scalarId = visit(numMul->scalar);
-        int matrixId = visit(numMul->matrix);
+        int scalarId = visit(numMul->get_scalar());
+        int matrixId = visit(numMul->get_matrix());
         if (scalarId != -1) dot_ << "    " << id << " -> " << scalarId << ";\n";
         if (matrixId != -1) dot_ << "    " << id << " -> " << matrixId << ";\n";
     }
     else if (auto pow = std::dynamic_pointer_cast<EvaluateTree::MatrixPowerPositiveInt>(node)) {
-        int baseId = visit(pow->base);
-        int expId = visit(pow->exponent);
+        int baseId = visit(pow->get_base());
+        int expId = visit(pow->get_exponent());
         if (baseId != -1) dot_ << "    " << id << " -> " << baseId << ";\n";
         if (expId != -1) dot_ << "    " << id << " -> " << expId << ";\n";
     }

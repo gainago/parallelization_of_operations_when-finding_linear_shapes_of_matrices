@@ -19,7 +19,7 @@ add_executable(make_abstract_syntax_tree main.cpp
     threadsafe_data_structures/thread_safe_queue.h
     threadsafe_data_structures/thread_pool.h
     threadsafe_data_structures/function_wrapper.h
-    threadsafe_data_structures/main.cpp
+
     matrix.h matrix.cpp
     evaluatenode.h
     evaluatenode.cpp)
