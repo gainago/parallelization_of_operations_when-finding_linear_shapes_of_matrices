@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
 
     QApplication app(argc, argv);
-    std::string input = "(A3^5*A5 - A1^2 + A4^3)(- A1 + (22-13)A3)(A1 + A2 + A3)*3*( A4*A5 - 56A1)";
+    std::string input = "(- A1 + (22-13)A3)^2(A1 * -A2 + A3)^3*3*( A4*A5 - 56A1)";
     std::vector<Token> tokens = tokenize(input);
     check_arithmetic_signs( tokens );
     normalize_tokenize_sequence( tokens );
@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     // }"
     Parser parser(tokens);
     std::unique_ptr<raw_AST_nodes::Expression> AST = parser.parse();
-    print_AST_to_file("Dot_example", *AST);
+    //print_AST_to_file("Dot_example", *AST);
     TypedResult typed_result = typeset(*AST);
 
     //print_AST_to_file("Dot_example", *(typed_result.node));
