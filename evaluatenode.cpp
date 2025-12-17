@@ -1,6 +1,12 @@
+
+#include <thread>
+
+#include <QApplication>
+
 #include "evaluatenode.h"
 #include "iostream"
-#include <thread>
+#include "evaluation_graph_widget.h"
+
 
 std::mutex mut_i_o;
 
@@ -289,23 +295,21 @@ std::shared_ptr<Node> make_evaluate_node(
 }
 
 EvaluateTree::EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root) {
-    auto start = std::chrono::high_resolution_clock::now();
-    {
         pool = std::make_shared<thread_pool>(10);
-
+        //make tree
         root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
-        root->calculate(); // it will recursively push other tasks in pool
-        while(!root->is_calculated_flag()) {
-            std::this_thread::yield();
-        }
-    } //to destroy pool automatically
-    std::variant<int, double, Matrix> result = root->get_result();
-    saveMatrixToFile(std::move(std::get<Matrix>(result)), "Result");
-    auto end = std::chrono::high_resolution_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Time on calculating Tree: " << diff.count() << std::endl;
-
-
+        std::shared_ptr<Node> local_root = this->root;
+        //collect all nodes
+        // std::vector<std::shared_ptr<Node> > vec_with_all_nodes;
+        // vec_with_all_nodes.push_back(root);
+        // for(size_t i = 0; i < vec_with_all_nodes.size(); i++) {
+        //     std::vector<std::shared_ptr<Node> > current_dependencies =
+        //         vec_with_all_nodes[i]->get_dependencies();
+        //     vec_with_all_nodes.insert(vec_with_all_nodes.end(),
+        //                               current_dependencies.begin(),
+        //                               current_dependencies.end());
+        // }
+        //Start GUI thread
 }
 
 }

@@ -15,11 +15,30 @@ class thread_pool {
     std::atomic<bool> done{false};
     std::vector<std::thread> threads;
 
+    std::mutex queue_mutex;
+    std::condition_variable condition;
+
 
     void worker_thread() {
         while( !done ) {
-            run_pending_task();
+            std::shared_ptr<function_wrapper> task;
+            {
+                std::unique_lock<std::mutex> lock(queue_mutex);
+                condition.wait(lock, [this]()->bool {
+                    return done == true || !pool_work_queue.empty();
+                });
+
+                if (done.load()) {
+                    return;
+                }
+
+                if (!pool_work_queue.try_pop(task)) {
+                    continue; // if suprious wake up
+                }
+            }
+            (*task)();
         }
+
     }
 
 public:
@@ -42,13 +61,15 @@ public:
     }
 
     void push_task(std::shared_ptr<function_wrapper> task) {
+        condition.notify_one();
         pool_work_queue.push(task);
     }
     void push_task(function_wrapper task) {
+        condition.notify_one();
         pool_work_queue.push(std::make_shared<function_wrapper>(std::move(task)));
     }
 
-    void run_pending_task() {
+    void run_pending_task() { //this method aimed to call from other thrdeam, not into thread
         std::shared_ptr<function_wrapper> ptr_to_task;
         if(pool_work_queue.try_pop(ptr_to_task)) {    
             (*ptr_to_task)();
@@ -60,6 +81,7 @@ public:
 
     ~thread_pool() {
         done = true;
+        condition.notify_all();
         for(size_t i = 0; i < threads.size(); ++i) {
             if(threads[i].joinable()) {
                 threads[i].join();

@@ -12,6 +12,7 @@
 
 
 
+
 namespace EvaluateTree {
 
 class Node : public std::enable_shared_from_this<Node> {
@@ -43,6 +44,12 @@ public:
     }
     virtual std::vector<std::shared_ptr<Node> > get_dependencies() = 0;
     virtual std::string get_node_type() const = 0;
+    std::chrono::milliseconds get_consumed_time() const {
+        if(!is_calculated_flag()) {
+            throw std::runtime_error("You can not get consumed time before result is ready");
+        }
+        return consumed_time;
+    }
     bool calculate();
 
 
@@ -58,9 +65,12 @@ class EvaluateTree {
     std::shared_ptr<thread_pool> pool;
     std::shared_ptr<Node> root;
     std::variant<double, Matrix> result;
-    void add_nodes(std::vector<std::shared_ptr<Node> >& vec) {
+    std::vector<std::shared_ptr<Node> > all_nodes;
+    std::chrono::milliseconds user_consumed_time;
 
-    }
+    // void add_nodes(std::vector<std::shared_ptr<Node> >& vec) {
+
+    // }
 
 public:
     EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root);
@@ -73,6 +83,20 @@ public:
             vec_to_ret.insert(vec_to_ret.end(), new_dependencies.begin(), new_dependencies.end());
         }
         return vec_to_ret;
+    }
+    std::shared_ptr<Node> get_root() {
+        return root;
+    }
+    void evaluate() {
+        auto start = std::chrono::high_resolution_clock::now();
+        root->calculate();
+        while(!root->is_calculated_flag()) {
+            std::this_thread::yield();
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        user_consumed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::variant<int, double, Matrix> result = root->get_result();
+        saveMatrixToFile(std::move(std::get<Matrix>(result)), "Result");
     }
     // Можно добавить метод evaluate(), если нужно
 };
@@ -87,7 +111,7 @@ public:
         const typed_AST_nodes::NumberLiteral* typed_node,
         std::weak_ptr<Node> parent,
         std::shared_ptr<thread_pool> pool);
-    std::vector<std::shared_ptr<Node> > get_dependencies() override {
+    std::vector<  std::shared_ptr<Node> > get_dependencies() override {
         return std::vector<std::shared_ptr<Node> >();
     }
 
