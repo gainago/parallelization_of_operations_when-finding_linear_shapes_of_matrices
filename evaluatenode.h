@@ -96,9 +96,9 @@ public:
         auto end = std::chrono::high_resolution_clock::now();
         user_consumed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::variant<int, double, Matrix> result = root->get_result();
+        std::cout << "Consumed time: " << this->user_consumed_time.count() << "ms\n";
         saveMatrixToFile(std::move(std::get<Matrix>(result)), "Result");
     }
-    // Можно добавить метод evaluate(), если нужно
 };
 
 class NumberLiteral : public Node {

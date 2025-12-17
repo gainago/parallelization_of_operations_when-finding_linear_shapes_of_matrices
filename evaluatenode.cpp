@@ -13,11 +13,11 @@ std::mutex mut_i_o;
 namespace EvaluateTree {
 
 bool Node::calculate() {
-    {
-        std::lock_guard<std::mutex> lock(mut_i_o);
-        std::cout << "Called calculate for: " << this->get_node_type() << " , ";
-        std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
-    }
+    // {
+    //     std::lock_guard<std::mutex> lock(mut_i_o);
+    //     std::cout << "Called calculate for: " << this->get_node_type() << " , ";
+    //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
+    // }
     if (is_calculated.load()) {
         return true;
     }
@@ -25,12 +25,12 @@ bool Node::calculate() {
     if (is_calculated.load()) {
         return true;
     }
-    {
-        std::lock_guard<std::mutex> lock(mut_i_o);
-        std::cout << "Before if(!is_dependencies_calculated(): \n";
-        std::cout << "Called calculate for: " << this->get_node_type() << " , ";
-        std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
-    }
+    // {
+    //     std::lock_guard<std::mutex> lock(mut_i_o);
+    //     std::cout << "Before if(!is_dependencies_calculated(): \n";
+    //     std::cout << "Called calculate for: " << this->get_node_type() << " , ";
+    //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
+    // }
     if (!is_dependencies_calculated()) { //push dependencies to thread_pull
         std::vector<std::shared_ptr<Node> > vec_with_dependencis =
             this->get_dependencies();
@@ -45,12 +45,12 @@ bool Node::calculate() {
         }
         return false;
     }
-    {
-        std::lock_guard<std::mutex> lock(mut_i_o);
-        std::cout << "Before make_special_operation: \n";
-        std::cout << "Called calculate for: " << this->get_node_type() << " , ";
-        std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
-    }
+    // {
+    //     std::lock_guard<std::mutex> lock(mut_i_o);
+    //     std::cout << "Before make_special_operation: \n";
+    //     std::cout << "Called calculate for: " << this->get_node_type() << " , ";
+    //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
+    // }
     auto start = std::chrono::high_resolution_clock::now();
     make_special_operation();
     auto end = std::chrono::high_resolution_clock::now();
@@ -295,7 +295,7 @@ std::shared_ptr<Node> make_evaluate_node(
 }
 
 EvaluateTree::EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root) {
-        pool = std::make_shared<thread_pool>(10);
+        pool = std::make_shared<thread_pool>(1);
         //make tree
         root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
         std::shared_ptr<Node> local_root = this->root;
