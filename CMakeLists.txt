@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
 add_executable(make_abstract_syntax_tree main.cpp
     raw_AST_nodes.h
     parser.h parser.cpp
@@ -22,7 +26,11 @@ add_executable(make_abstract_syntax_tree main.cpp
 
     matrix.h matrix.cpp
     evaluatenode.h
-    evaluatenode.cpp)
+    evaluatenode.cpp
+    evaluation_graph_widget.h evaluation_graph_widget.cpp)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+target_link_libraries( make_abstract_syntax_tree PRIVATE Qt6::Widgets)
 
 include(GNUInstallDirs)
 install(TARGETS make_abstract_syntax_tree

@@ -344,7 +344,10 @@ std::unique_ptr<typed_AST_nodes::TypedExpression> try_precompute_numbers(
             );
     }
     if(auto* mat_pow_int = dynamic_cast<typed_AST_nodes::MatrixPowerPositiveInt*>(typed_syntax_three_node.get())) {
-        return typed_syntax_three_node;
+        return std::make_unique<typed_AST_nodes::MatrixPowerPositiveInt>(
+            try_precompute_numbers(std::move(mat_pow_int->base)),
+            std::move(mat_pow_int->exponent));
+        //return typed_syntax_three_node;
     }
     if(auto* num_mul_mat = dynamic_cast<typed_AST_nodes::NumberMultiplyMatrix*>(typed_syntax_three_node.get())) {
         return std::make_unique<typed_AST_nodes::NumberMultiplyMatrix>(
