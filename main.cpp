@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
 
     QApplication app(argc, argv);
-    std::string input = "(- A1 + (22-13)A3)^2(A1 * -A2 + A3)^3*3*( A4*A5 - 56A1)";
+    std::string input = "(- A1 + (22^8-13)A3)^2(A1 * -A2^3 + A3^4)^2*3*( A4^2*A5^2 - 56A1)^3";
     std::vector<Token> tokens = tokenize(input);
     check_arithmetic_signs( tokens );
     normalize_tokenize_sequence( tokens );

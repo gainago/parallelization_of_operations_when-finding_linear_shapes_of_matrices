@@ -61,11 +61,11 @@ public:
     }
 
     void push_task(std::shared_ptr<function_wrapper> task) {
-        condition.notify_one();
+        condition.notify_all();
         pool_work_queue.push(task);
     }
     void push_task(function_wrapper task) {
-        condition.notify_one();
+        condition.notify_all();
         pool_work_queue.push(std::make_shared<function_wrapper>(std::move(task)));
     }
 

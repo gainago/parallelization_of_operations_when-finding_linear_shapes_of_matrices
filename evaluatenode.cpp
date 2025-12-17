@@ -295,21 +295,10 @@ std::shared_ptr<Node> make_evaluate_node(
 }
 
 EvaluateTree::EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root) {
-        pool = std::make_shared<thread_pool>(1);
-        //make tree
-        root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
-        std::shared_ptr<Node> local_root = this->root;
-        //collect all nodes
-        // std::vector<std::shared_ptr<Node> > vec_with_all_nodes;
-        // vec_with_all_nodes.push_back(root);
-        // for(size_t i = 0; i < vec_with_all_nodes.size(); i++) {
-        //     std::vector<std::shared_ptr<Node> > current_dependencies =
-        //         vec_with_all_nodes[i]->get_dependencies();
-        //     vec_with_all_nodes.insert(vec_with_all_nodes.end(),
-        //                               current_dependencies.begin(),
-        //                               current_dependencies.end());
-        // }
-        //Start GUI thread
+    pool = std::make_shared<thread_pool>(1);
+    //make tree
+    root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
+    std::shared_ptr<Node> local_root = this->root;
 }
 
 }
