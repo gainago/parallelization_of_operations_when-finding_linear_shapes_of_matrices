@@ -51,6 +51,8 @@ bool Node::calculate() {
     //     std::cout << "Called calculate for: " << this->get_node_type() << " , ";
     //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
     // }
+    start_calculated.store(true);
+    //std::cout << "Start calculated\n" << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
     make_special_operation();
     auto end = std::chrono::high_resolution_clock::now();
@@ -295,7 +297,7 @@ std::shared_ptr<Node> make_evaluate_node(
 }
 
 EvaluateTree::EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root) {
-    pool = std::make_shared<thread_pool>(1);
+    pool = std::make_shared<thread_pool>(10);
     //make tree
     root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
     std::shared_ptr<Node> local_root = this->root;

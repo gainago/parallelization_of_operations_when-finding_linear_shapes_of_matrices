@@ -23,6 +23,7 @@ protected:
     std::weak_ptr<Node> parent_weak;
     std::shared_ptr<thread_pool> ptr_to_pool;
     std::string expression;
+    std::atomic<bool> start_calculated{false};
 
     std::variant<int, double, Matrix> result;
     std::mutex mut;
@@ -35,6 +36,9 @@ protected:
 public:
     bool is_calculated_flag() const {
         return is_calculated.load();
+    }
+    bool start_calculated_flag() const {
+        return start_calculated.load();
     }
     std::variant<int, double, Matrix> get_result() {
         if(! is_calculated_flag()) {

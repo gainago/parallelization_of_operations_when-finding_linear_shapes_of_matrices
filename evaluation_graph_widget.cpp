@@ -65,7 +65,7 @@ public:
         QFont font = label_->font();
         font.setPointSize(10);
         label_->setFont(font);
-        label_->adjustSize(); // Принудительно пересчитать размер
+        label_->adjustSize();
         label_->setPos( x - 20, y -30);
         //std::cout << processNodeString(node->get_node_type()) << std::endl;
         label_->setDefaultTextColor(Qt::black);
@@ -77,7 +77,10 @@ public:
             setToolTip(QString("%1<br>Evaluated in %2 ms")
                            .arg(QString::fromStdString(node_->get_node_type()))
                            .arg(node_->get_consumed_time().count()));
-        } else {
+        } else if (node_->start_calculated_flag())    {
+            setBrush(QBrush(Qt::blue));
+            setToolTip(QString("evaluating"));
+        } else   {
             setBrush(QBrush(Qt::gray));
             setToolTip(QString("%1<br>Not evaluated yet")
                            .arg(QString::fromStdString(node_->get_node_type())));
@@ -114,19 +117,18 @@ EvaluationGraphWidget::EvaluationGraphWidget(
     layout->addWidget(view_);
     setLayout(layout);
 
-    // Отображаем граф
+    // drow graph
     std::map<std::shared_ptr<EvaluateTree::Node>, EvaluationNodeItem*> nodeToItem;
-    layoutGraph(root, 0, 0, 250.0, 0, nodeToItem);
+    layoutGraph(root, 0, 0, 300.0, 0, nodeToItem);
 
-    // Автоматически центрируем сцену
     scene_->setSceneRect(scene_->itemsBoundingRect().adjusted(-100, -100, 100, 100));
 
-    // Запускаем таймер обновления
+    // start timer
     timer_ = new QTimer(this);
     connect(timer_, &QTimer::timeout, this, &EvaluationGraphWidget::updateNodeColors);
     timer_->start(100); // каждые 100 мс
 
-    // Сохраняем указатели для обновления
+    // save pairs to fast update
     for (auto& pair : nodeToItem) {
         allItems_.push_back(pair.second);
     }
@@ -140,8 +142,6 @@ void EvaluationGraphWidget::layoutGraph(
     std::map<std::shared_ptr<EvaluateTree::Node>, EvaluationNodeItem*>& nodeToItem
     ) {
     if (!node) return;
-
-    // Создаём узел
     auto item = new EvaluationNodeItem(x, y, node);
     scene_->addItem(item);
     nodeToItem[node] = item;
@@ -157,12 +157,8 @@ void EvaluationGraphWidget::layoutGraph(
     for (int i = 0; i < n; ++i) {
         qreal childX = startX + i * hSpacing;
         qreal childY = y + 120;
-
-        // Рисуем ребро
         auto edge = scene_->addLine(x, y + 15, childX, childY - 15, QPen(Qt::black, 1));
-
-
-        layoutGraph(children[i], childX, childY, hSpacing * 0.7, depth + 1, nodeToItem);
+        layoutGraph(children[i], childX, childY, hSpacing * 0.8, depth + 1, nodeToItem);
     }
 }
 

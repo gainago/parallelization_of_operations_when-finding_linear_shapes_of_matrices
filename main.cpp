@@ -5,19 +5,13 @@
 #include "evaluatenode.h"
 #include "evaluation_graph_widget.h"
 #include "printer_to_dot.h"
-#include <thread>
+#include "fluent_expression_constructor.h"
 
-int main(int argc, char** argv)
-{
+void calculate(std::string input) {
 
-    QApplication app(argc, argv);
-    std::string input = "(- A1 + (22^8-13)A3)^2(A1 * -A2^3 + A3^4)^2*3*( A4^2*A5^2 - 56A1)^3";
     std::vector<Token> tokens = tokenize(input);
     check_arithmetic_signs( tokens );
     normalize_tokenize_sequence( tokens );
-    // for( int i = 0; i < tokens.size(); i++) {
-    //     std::cout << token_type_to_string( tokens[i].type ) << "\"" << tokens[i].lexeme << "\"";
-    // }"
     Parser parser(tokens);
     std::unique_ptr<raw_AST_nodes::Expression> AST = parser.parse();
     //print_AST_to_file("Dot_example", *AST);
@@ -42,5 +36,21 @@ int main(int argc, char** argv)
         ptr_tree->evaluate();
     };
     pool.push_task(std::move(lambda));
+}
+
+int main(int argc, char** argv)
+{
+
+    QApplication app(argc, argv);
+    //std::string input = "(- A1 + (22^8-13)A3)^2(A1 * -A2^3 + A3^4)^2*3";
+    std::string input = FluentExpressionConstructor("A1")
+                            .plus("A3")
+                            .plus("-A4")
+                            .multiply("A4")
+                            .times("43")
+                            .exponent("4").GetExpression();
+    //std::string input = "A1 +- A2";
+    std::cout << input << std::endl;
+    calculate(input);
         return app.exec();
 }

@@ -27,7 +27,8 @@ add_executable(make_abstract_syntax_tree main.cpp
     matrix.h matrix.cpp
     evaluatenode.h
     evaluatenode.cpp
-    evaluation_graph_widget.h evaluation_graph_widget.cpp)
+    evaluation_graph_widget.h evaluation_graph_widget.cpp
+    fluent_expression_constructor.h fluent_expression_constructor.cpp)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 target_link_libraries( make_abstract_syntax_tree PRIVATE Qt6::Widgets)

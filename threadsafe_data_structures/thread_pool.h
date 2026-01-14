@@ -2,9 +2,9 @@
 #define GLOBAL_THREAD_PULL_H
 
 #include <atomic>
-#include <functional>
 #include <future>
 #include <iostream>
+#include <vector>
 
 #include "thread_safe_queue.h"
 #include "function_wrapper.h"
@@ -27,18 +27,15 @@ class thread_pool {
                 condition.wait(lock, [this]()->bool {
                     return done == true || !pool_work_queue.empty();
                 });
-
                 if (done.load()) {
                     return;
                 }
-
                 if (!pool_work_queue.try_pop(task)) {
                     continue; // if suprious wake up
                 }
             }
             (*task)();
         }
-
     }
 
 public:
@@ -61,7 +58,7 @@ public:
     }
 
     void push_task(std::shared_ptr<function_wrapper> task) {
-        condition.notify_all();
+        condition.notify_one();
         pool_work_queue.push(task);
     }
     void push_task(function_wrapper task) {
