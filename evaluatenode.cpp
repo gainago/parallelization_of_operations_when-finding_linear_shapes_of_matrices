@@ -13,11 +13,11 @@ std::mutex mut_i_o;
 namespace EvaluateTree {
 
 bool Node::calculate() {
-    // {
-    //     std::lock_guard<std::mutex> lock(mut_i_o);
-    //     std::cout << "Called calculate for: " << this->get_node_type() << " , ";
-    //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
-    // }
+    {
+        std::lock_guard<std::mutex> lock(mut_i_o);
+        std::cout << "Called calculate for: " << this->get_node_type() << " , ";
+        std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
+    }
     if (is_calculated.load()) {
         return true;
     }
@@ -25,15 +25,17 @@ bool Node::calculate() {
     if (is_calculated.load()) {
         return true;
     }
-    // {
-    //     std::lock_guard<std::mutex> lock(mut_i_o);
-    //     std::cout << "Before if(!is_dependencies_calculated(): \n";
-    //     std::cout << "Called calculate for: " << this->get_node_type() << " , ";
-    //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
-    // }
+    {
+        std::lock_guard<std::mutex> lock(mut_i_o);
+        std::cout << "Before if(!is_dependencies_calculated(): \n";
+        std::cout << "Called calculate for: " << this->get_node_type() << " , ";
+        std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
+    }
     if (!is_dependencies_calculated()) { //push dependencies to thread_pull
         std::vector<std::shared_ptr<Node> > vec_with_dependencis =
             this->get_dependencies();
+        std::cout << "for task: " << this->expression << std::endl;
+        std::cout << "number of dependencies " << vec_with_dependencis.size() << std::endl;
         for(size_t i = 0; i < vec_with_dependencis.size(); ++i) {
             if(vec_with_dependencis[i]->is_calculated_flag() == false) {
                 std::shared_ptr<Node> task = vec_with_dependencis[i];
@@ -41,6 +43,7 @@ bool Node::calculate() {
                     task->calculate();
                 };
                 ptr_to_pool->push_task(std::move(lambda));
+                std::cout << "pushed task " << this->expression << "end of Expression" << std::endl;
             }
         }
         return false;
@@ -52,7 +55,7 @@ bool Node::calculate() {
     //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
     // }
     start_calculated.store(true);
-    //std::cout << "Start calculated\n" << std::endl;
+    std::cout << "Start calculated\n" << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
     make_special_operation();
     auto end = std::chrono::high_resolution_clock::now();
