@@ -48,8 +48,6 @@ int main(int argc, char** argv)
     auto lambda = [ptr_tree](){
         ptr_tree->evaluate();
     };
-    //std::thread th(std::move(lambda));
-    //th.detach();
     pool.push_task(std::move(lambda));
 
     return app.exec();
