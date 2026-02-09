@@ -1,6 +1,12 @@
+
+#include <thread>
+
+#include <QApplication>
+
 #include "evaluatenode.h"
 #include "iostream"
-#include <thread>
+#include "evaluation_graph_widget.h"
+
 
 std::mutex mut_i_o;
 
@@ -28,6 +34,8 @@ bool Node::calculate() {
     if (!is_dependencies_calculated()) { //push dependencies to thread_pull
         std::vector<std::shared_ptr<Node> > vec_with_dependencis =
             this->get_dependencies();
+        std::cout << "for task: " << this->expression << std::endl;
+        std::cout << "number of dependencies " << vec_with_dependencis.size() << std::endl;
         for(size_t i = 0; i < vec_with_dependencis.size(); ++i) {
             if(vec_with_dependencis[i]->is_calculated_flag() == false) {
                 std::shared_ptr<Node> task = vec_with_dependencis[i];
@@ -35,16 +43,19 @@ bool Node::calculate() {
                     task->calculate();
                 };
                 ptr_to_pool->push_task(std::move(lambda));
+                std::cout << "pushed task " << this->expression << "end of Expression" << std::endl;
             }
         }
         return false;
     }
-    {
-        std::lock_guard<std::mutex> lock(mut_i_o);
-        std::cout << "Before make_special_operation: \n";
-        std::cout << "Called calculate for: " << this->get_node_type() << " , ";
-        std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
-    }
+    // {
+    //     std::lock_guard<std::mutex> lock(mut_i_o);
+    //     std::cout << "Before make_special_operation: \n";
+    //     std::cout << "Called calculate for: " << this->get_node_type() << " , ";
+    //     std::cout << "Current status: " << this->is_calculated_flag() << std::endl;
+    // }
+    start_calculated.store(true);
+    std::cout << "Start calculated\n" << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
     make_special_operation();
     auto end = std::chrono::high_resolution_clock::now();
@@ -289,23 +300,10 @@ std::shared_ptr<Node> make_evaluate_node(
 }
 
 EvaluateTree::EvaluateTree(const typed_AST_nodes::TypedExpression* typed_precompute_ast_root) {
-    auto start = std::chrono::high_resolution_clock::now();
-    {
-        pool = std::make_shared<thread_pool>(10);
-
-        root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
-        root->calculate(); // it will recursively push other tasks in pool
-        while(!root->is_calculated_flag()) {
-            std::this_thread::yield();
-        }
-    } //to destroy pool automatically
-    std::variant<int, double, Matrix> result = root->get_result();
-    saveMatrixToFile(std::move(std::get<Matrix>(result)), "Result");
-    auto end = std::chrono::high_resolution_clock::now();
-    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Time on calculating Tree: " << diff.count() << std::endl;
-
-
+    pool = std::make_shared<thread_pool>(10);
+    //make tree
+    root = make_evaluate_node(typed_precompute_ast_root, std::weak_ptr<Node>{}, pool);
+    std::shared_ptr<Node> local_root = this->root;
 }
 
 }

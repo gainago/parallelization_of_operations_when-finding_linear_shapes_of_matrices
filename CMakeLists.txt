@@ -4,7 +4,11 @@ project(make_abstract_syntax_tree LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -O2")
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 
 add_executable(make_abstract_syntax_tree main.cpp
     raw_AST_nodes.h
@@ -22,7 +26,13 @@ add_executable(make_abstract_syntax_tree main.cpp
 
     matrix.h matrix.cpp
     evaluatenode.h
-    evaluatenode.cpp)
+    evaluatenode.cpp
+    evaluation_graph_widget.h evaluation_graph_widget.cpp
+    fluent_expression_constructor.h fluent_expression_constructor.cpp
+    report_of_course_work.pdf)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+target_link_libraries( make_abstract_syntax_tree PRIVATE Qt6::Widgets)
 
 include(GNUInstallDirs)
 install(TARGETS make_abstract_syntax_tree
